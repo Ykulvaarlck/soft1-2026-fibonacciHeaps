@@ -153,8 +153,9 @@ public class Heap {
         this.deleteMin();
     }
 
-
-    public void successiveLink() {
+    // perform successive linking on the heap as it currently is
+    // to be called after deleteMin or when lazy melds are disabled
+    private void successiveLink() {
         if (this.root.child == null) {
             // no nodes in the heap so there is nothing to do
             this.min = null;
