@@ -86,7 +86,7 @@ public class Heap {
      * complexity:
      * depending on `lazyDecreaseKeys`, either heapifyUp or cascading cuts.
      * in either case the depths of the trees are log n, so either of them take O(log n).
-     * when lazyMelds==false and lazyDecreaseKeys==true, the series of successive links are still O(log n) together.
+     * when lazyMelds==false and lazyDecreaseKeys==true, the analysis is more involved (refer to documentation)
      */
     public void decreaseKey(HeapItem x, int diff) {
         x.key -= diff;
@@ -151,8 +151,8 @@ public class Heap {
     }
 
     /**
-     * perform successive linking on the heap as it currently is,
-     * to be called after deleteMin or when lazy melds are disabled.
+     * perform successive linking on the heap as it currently is.
+     * to be called after deleteMin or when melding with lazyMelds=false.
      * complexity: linear in the number of roots, so O(log n).
      */
     private void successiveLink() {
@@ -227,7 +227,7 @@ public class Heap {
         this.linkCount += heap2.linkCount;
         this.heapifyCount += heap2.heapifyCount;
 
-        // only necessary if lazyMelds is true
+        // note: only strictly necessary if lazyMelds is true
         if (this.min == null || (
                 heap2.min != null && this.min.key > heap2.min.key)) {
             this.min = heap2.min;
@@ -324,7 +324,7 @@ public class Heap {
         /**
          * Add all children of `other` to `this`. `other` loses its children.
          * NOTE: this does not update the `parent`s of any node in `other`
-         * NOTE: only to be used when `other` is another root containing all roots,
+         * NOTE: only to be used when `other` is another roots sentinel,
          *   or right before a successive linking (which updates all parent pointers anyway)
          */
         public void extend(HeapNode other) {
