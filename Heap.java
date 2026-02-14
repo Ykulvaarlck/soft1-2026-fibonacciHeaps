@@ -187,7 +187,7 @@ public class Heap {
         var bins = new HeapNode[64]; // you are not going to surpass rank 64 with any reasonable amount of memory
         for (var root : roots) {
             curr = root;
-            // System.out.println(curr.rank);
+            // repeatedly link until no other root of same rank exists
             while (bins[curr.rank] != null) {
                 var other = bins[curr.rank];
                 bins[curr.rank] = null;
@@ -209,6 +209,7 @@ public class Heap {
             if (root != null) {
                 this.roots.append(root);
                 if (this.min == null || this.min.key > root.item.key) {
+                    // update the min pointer
                     this.min = root.item;
                 }
             }
@@ -331,6 +332,7 @@ public class Heap {
             item.node = this;
         }
 
+        // whether the current node is one of the roots in the heap
         public boolean isRoot() {
             return this.parent != null && this.parent.item == null;
         }
@@ -381,7 +383,7 @@ public class Heap {
             other.parent = this;
         }
 
-        // cut this node from its parent
+        // cut this node and its subtree from its parent
         // NOTE: this does not modify or use the `marked` field
         // NOTE: this clears `this`'s `parent`.
         public void cut() {
