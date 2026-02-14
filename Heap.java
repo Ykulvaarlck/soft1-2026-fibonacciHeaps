@@ -11,7 +11,11 @@ public class Heap {
     public final boolean lazyDecreaseKeys;
     public HeapItem min;
 
-    public HeapNode root; // sentinel node, contains roots as children
+    // sentinel node, contains all roots as children
+    // i use HeapNode for this mostly to reuse the `extend` and `append` logic.
+    // melding heaps can make some roots not have a correct `parent`, but we do not use it for roots
+    public HeapNode roots;
+
     public int rootCount = 0;
     public int itemCount = 0;
     public int markedCount = 0;
@@ -30,7 +34,7 @@ public class Heap {
         // student code can be added here
 
         this.min = null;
-        this.root = new HeapNode();
+        this.roots = new HeapNode();
     }
 
     /**
@@ -49,7 +53,7 @@ public class Heap {
             this.min = item;
         }
 
-        this.root.append(node);
+        this.roots.append(node);
         this.rootCount++;
         if (!this.lazyMelds) {
             this.successiveLink();
@@ -78,7 +82,7 @@ public class Heap {
         // this.markedCount does not change because the minimum must be a root, and roots are not marked
         minNode.cut(); // this does not count towards the total cuts
         this.rootCount--;
-        this.root.extend(minNode); // add all children of the minimum to the root list
+        this.roots.extend(minNode); // add all children of the minimum to the root list
         this.rootCount += minNode.rank;
         this.successiveLink(); // NOTE: this will update this.min and this.rootCount
     }
@@ -114,7 +118,7 @@ public class Heap {
                     this.markedCount--;
                     curr.marked = false;
                 }
-                this.root.append(curr);
+                this.roots.append(curr);
                 this.rootCount++;
                 if (!this.lazyMelds) {
                     this.successiveLink();
@@ -156,7 +160,7 @@ public class Heap {
     // perform successive linking on the heap as it currently is
     // to be called after deleteMin or when lazy melds are disabled
     private void successiveLink() {
-        if (this.root.child == null) {
+        if (this.roots.child == null) {
             // no nodes in the heap so there is nothing to do
             this.min = null;
             return;
@@ -164,14 +168,14 @@ public class Heap {
 
         // move all of the roots into a new array to simplify/ignore handling of next/prev pointers
         // rootCount may not be accurate so we have to calculate it
-        var start = this.root.child;
+        var start = this.roots.child;
         var curr = start.next;
         int rootCount = 1;
         while (curr != start) {
             curr = curr.next;
             rootCount++;
         }
-        curr = this.root.child;
+        curr = this.roots.child;
         HeapNode[] roots = new HeapNode[rootCount];
         for (int i = 0; i < rootCount; i++) {
             roots[i] = curr;
@@ -198,18 +202,18 @@ public class Heap {
             bins[curr.rank] = curr;
         }
         this.min = null;
-        this.root.child = null; // "clear" the root list
-        this.root.rank = 0;
+        this.roots.child = null; // "clear" the root list
+        this.roots.rank = 0;
         // put all new roots into the heap
         for (var root : bins) {
             if (root != null) {
-                this.root.append(root);
+                this.roots.append(root);
                 if (this.min == null || this.min.key > root.item.key) {
                     this.min = root.item;
                 }
             }
         }
-        this.rootCount = this.root.rank;
+        this.rootCount = this.roots.rank;
     }
 
     /**
@@ -233,7 +237,7 @@ public class Heap {
             this.min = heap2.min;
         }
 
-        this.root.extend(heap2.root);
+        this.roots.extend(heap2.roots);
 
         if (!this.lazyMelds) {
             this.successiveLink();
