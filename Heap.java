@@ -1,6 +1,6 @@
 /**
  * Heap
- * <p>
+ *
  * An implementation of Fibonacci heap over positive integers
  * with the possibility of not performing lazy melds and
  * the possibility of not performing lazy decrease keys.
@@ -24,9 +24,7 @@ public class Heap {
     public int heapifyCount = 0;
 
     /**
-     *
      * Constructor to initialize an empty heap.
-     *
      */
     public Heap(boolean lazyMelds, boolean lazyDecreaseKeys) {
         this.lazyMelds = lazyMelds;
@@ -38,11 +36,9 @@ public class Heap {
     }
 
     /**
-     *
-     * pre: key > 0
-     * <p>
      * Insert (key,info) into the heap and return the newly generated HeapNode.
-     *
+     * pre: key > 0
+     * complexity: O(1) if lazyMelds==true, otherwise O(log n).
      */
     public HeapItem insert(int key, String info) {
         var item = new HeapItem(key, info);
@@ -62,9 +58,7 @@ public class Heap {
     }
 
     /**
-     *
      * Return the minimal HeapNode, null if empty.
-     *
      */
     public HeapItem findMin() {
         return this.min;
@@ -72,9 +66,8 @@ public class Heap {
 
 
     /**
-     *
      * Delete the minimal item.
-     *
+     * complexity: O(log n) because of the successive linking.
      */
     public void deleteMin() {
         var minNode = this.min.node;
@@ -88,11 +81,12 @@ public class Heap {
     }
 
     /**
-     *
-     * pre: 0<=diff<=x.key
-     * <p>
      * Decrease the key of x by diff and fix the heap.
-     *
+     * pre: 0<=diff<=x.key
+     * complexity:
+     * depending on `lazyDecreaseKeys`, either heapifyUp or cascading cuts.
+     * in either case the depths of the trees are log n, so either of them take O(log n).
+     * when lazyMelds==false and lazyDecreaseKeys==true, the series of successive links are still O(log n) together.
      */
     public void decreaseKey(HeapItem x, int diff) {
         x.key -= diff;
@@ -147,9 +141,8 @@ public class Heap {
     }
 
     /**
-     *
      * Delete the x from the heap.
-     *
+     * delete by decreasing x to be the new minimum then deleteMin()ing.
      */
     public void delete(HeapItem x) {
         int D = x.key - this.min.key;
@@ -157,8 +150,11 @@ public class Heap {
         this.deleteMin();
     }
 
-    // perform successive linking on the heap as it currently is
-    // to be called after deleteMin or when lazy melds are disabled
+    /**
+     * perform successive linking on the heap as it currently is,
+     * to be called after deleteMin or when lazy melds are disabled.
+     * complexity: linear in the number of roots, so O(log n).
+     */
     private void successiveLink() {
         if (this.roots.child == null) {
             // no nodes in the heap so there is nothing to do
@@ -218,10 +214,9 @@ public class Heap {
     }
 
     /**
-     *
      * Meld the heap with heap2
+     * <p>
      * pre: heap2.lazyMelds = this.lazyMelds AND heap2.lazyDecreaseKeys = this.lazyDecreaseKeys
-     *
      */
     public void meld(Heap heap2) {
         // add histories
@@ -247,9 +242,7 @@ public class Heap {
 
 
     /**
-     *
      * Return the number of elements in the heap
-     *
      */
     public int size() {
         return this.itemCount;
@@ -257,9 +250,7 @@ public class Heap {
 
 
     /**
-     *
      * Return the number of trees in the heap.
-     *
      */
     public int numTrees() {
         return this.rootCount;
@@ -267,9 +258,7 @@ public class Heap {
 
 
     /**
-     *
      * Return the number of marked nodes in the heap.
-     *
      */
     public int numMarkedNodes() {
         return this.markedCount;
@@ -277,9 +266,7 @@ public class Heap {
 
 
     /**
-     *
      * Return the total number of links.
-     *
      */
     public int totalLinks() {
         return this.linkCount;
@@ -287,9 +274,7 @@ public class Heap {
 
 
     /**
-     *
      * Return the total number of cuts.
-     *
      */
     public int totalCuts() {
         return this.cutCount;
@@ -297,9 +282,7 @@ public class Heap {
 
 
     /**
-     *
      * Return the total heapify costs.
-     *
      */
     public int totalHeapifyCosts() {
         return this.heapifyCount;
@@ -308,7 +291,6 @@ public class Heap {
 
     /**
      * Class implementing a node in a Heap.
-     *
      */
     public static class HeapNode {
         public HeapItem item;
@@ -332,15 +314,19 @@ public class Heap {
             item.node = this;
         }
 
-        // whether the current node is one of the roots in the heap
+        /**
+         * whether the current node is one of the roots in the heap
+         */
         public boolean isRoot() {
             return this.parent != null && this.parent.item == null;
         }
 
-        // add all children of `other` to `this`. `other` loses its children.
-        // NOTE: this does not update the `parent`s of any node in `other`
-        // NOTE: only to be used when `other` is another root containing all roots,
-        //  or right before a successive linking (which updates all parent pointers anyway)
+        /**
+         * Add all children of `other` to `this`. `other` loses its children.
+         * NOTE: this does not update the `parent`s of any node in `other`
+         * NOTE: only to be used when `other` is another root containing all roots,
+         *   or right before a successive linking (which updates all parent pointers anyway)
+         */
         public void extend(HeapNode other) {
             this.rank += other.rank;
             if (this.child == null) {
@@ -361,8 +347,10 @@ public class Heap {
             other.child = null;
         }
 
-        // append `other` to the child list
-        // NOTE: this overwrites `other`'s parent/next/prev
+        /**
+         * append `other` to the child list.
+         * NOTE: this overwrites `other`'s parent/next/prev
+         */
         public void append(HeapNode other) {
             this.rank += 1;
             if (this.child == null) {
@@ -383,9 +371,11 @@ public class Heap {
             other.parent = this;
         }
 
-        // cut this node and its subtree from its parent
-        // NOTE: this does not modify or use the `marked` field
-        // NOTE: this clears `this`'s `parent`.
+        /**
+         * cut this node and its subtree from its parent.
+         * NOTE: this does not modify or use the `marked` field
+         * NOTE: this clears `this`'s `parent`.
+         */
         public void cut() {
             if (this.parent != null) {
                 // remove `this` from its parent
@@ -412,7 +402,6 @@ public class Heap {
 
     /**
      * Class implementing an item in a Heap.
-     *
      */
     public static class HeapItem {
         public HeapNode node;
